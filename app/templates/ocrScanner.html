@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Soil Test Image</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      input[type="file"] {
+        margin-bottom: 10px;
+      }
+      button {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      .flash {
+        color: red;
+        margin-bottom: 10px;
+      }
+      .results {
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Upload Soil Test Image</h1>
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <div class="flash">
+      {% for message in messages %}
+      <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+    <form action="/" method="post" enctype="multipart/form-data">
+      <input type="file" name="file" required />
+      <button type="submit">Upload</button>
+    </form>
+
+    {% if results %}
+    <div class="results">
+      <h2>Soil Test Results (lbs/acre)</h2>
+      <p>Nitrogen: {{ results.nitrogen }} lbs/acre</p>
+      <p>Phosphorus: {{ results.phosphorus }} lbs/acre</p>
+      <p>Potassium: {{ results.potassium }} lbs/acre</p>
+      <p>pH: {{ results.ph }}</p>
+    </div>
+    {% endif %}
+  </body>
+</html>

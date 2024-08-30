@@ -1,61 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Crop and Soil Prediction{% endblock %}</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            background-color: #333;
-            padding: 10px;
-        }
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            padding: 10px;
-        }
-        .navbar a:hover {
-            background-color: #575757;
-        }
-        .container {
-            padding: 20px;
-        }
-        .translate-container {
-            float: right;
-        }
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        background-color: #333;
+        padding: 10px;
+      }
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        padding: 10px;
+      }
+      .navbar a:hover {
+        background-color: #575757;
+      }
+      .container {
+        padding: 20px;
+      }
+      .translate-container {
+        float: right;
+      }
     </style>
     <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                includedLanguages: 'en,hi,mr', // English (en), Hindi (hi), and Marathi (mr)
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE, // Simple dropdown
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: "en",
+            includedLanguages: "en,hi,mr", // English (en), Hindi (hi), and Marathi (mr)
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE, // Simple dropdown
+            autoDisplay: false,
+          },
+          "google_translate_element"
+        );
+      }
     </script>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-</head>
-<body>
+    <script
+      type="text/javascript"
+      src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
+    ></script>
+  </head>
+  <body>
     <div class="navbar">
-        <div>
-            <a href="/">Home</a>
-            <a href="/soil_analysis">Soil Analysis</a>
-            <a href="/yield_production">Yield Production</a>
-            <a href="/price_prediction">Price Prediction</a>
-            <a href="/cropPrediction">Crop Prediction</a>
-        </div>
-        <div class="translate-container">
-            <div id="google_translate_element"></div>
-        </div>
+      <div>
+        <a href="/">Home</a>
+        <a href="/soil_analysis">Soil Analysis</a>
+        <a href="/yield_production">Yield Production</a>
+        <a href="/price_prediction">Price Prediction</a>
+        <a href="/cropPrediction">Crop Prediction</a>
+        <a href="/disease">Disease Prediction</a>
+        <a href="/weather">Weather Forecast</a>
+        <a href="/ocrScanner" OCR Scanner for Soli Health Card</a>
+      </div>
+      <div class="translate-container">
+        <div id="google_translate_element"></div>
+      </div>
     </div>
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
-</body>
+    <div class="container">{% block content %}{% endblock %}</div>
+  </body>
 </html>
