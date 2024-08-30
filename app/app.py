@@ -1,18 +1,38 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
-import requests
 import pandas as pd
 import joblib
-from sklearn.preprocessing import StandardScaler
+import pickle
 from sklearn.impute import SimpleImputer
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Required for flashing messages
 
-NODE_BACKEND_URL = 'http://localhost:5000/api/farmers/'
+# Define paths to models and scalers
+MODELS_PATH = 'models/'
+SOIL_MODEL_PATH = MODELS_PATH + 'soil_classifier_model.pkl'
+CROP_YIELD_MODEL_PATH = MODELS_PATH + 'crop_yield_model.pkl'
+CROP_PREDICTION_MODEL_PATH = MODELS_PATH + 'crop_prediction_model.pkl'
+PRICE_MODEL_PATH = MODELS_PATH + 'xgb_model.pkl'
+
+SCALER_SOIL_PATH = MODELS_PATH + 'scaler_soil_analysis.pkl'
+SCALER_YIELD_PATH = MODELS_PATH + 'scaler.pkl'
+SCALER_PREDICTION_PATH = MODELS_PATH + 'standard_scaler.pkl'
+SCALER_PRICE_PATH = MODELS_PATH + 'scaler_prediction_price.pkl'
 
 
 def load_model(model_path):
     """Load the trained model from a file."""
-    return joblib.load(model_path)
+    with open(model_path, 'rb') as file:
+        model = pickle.load(file)
+    return model
+
+
+def load_scaler(scaler_path):
+    """Load the scaler from a file."""
+    with open(scaler_path, 'rb') as file:
+        scaler = pickle.load(file)
+    return scaler
+
 
 def prepare_data(input_data, feature_names, scaler=None):
     """Prepare input data for prediction."""
@@ -28,40 +48,22 @@ def prepare_data(input_data, feature_names, scaler=None):
     
     return df
 
-def predict_soil_type(model, data):
-    """Predict the soil type based on the input data."""
+
+def predict(model, data):
+    """Predict using the provided model and data."""
     return model.predict(data)
 
-def predict_yield(model_path, input_values):
-    """Predict crop yield based on the input values."""
-    model = load_model(model_path)
-    input_df = pd.DataFrame([input_values])
-    predicted_yield = model.predict(input_df)
-    return predicted_yield[0]
-
-def predict_price(model_path, input_values):
-    """Predict crop price based on the input values."""
-    model = load_model(model_path)
-    input_df = pd.DataFrame([input_values])
-    predicted_price = model.predict(input_df)
-    return predicted_price[0]
-
-def predict_crop_type(model, data):
-    """Predict the crop type based on the input data."""
-    return model.predict(data)
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
+
 @app.route('/soil_analysis', methods=['GET', 'POST'])
 def soil_analysis():
-    soil_model_path = 'models/soil_classifier_model.pkl'
     feature_names = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+    scaler = load_scaler(SCALER_SOIL_PATH)
     
-    # Load the fitted scaler
-    scaler = joblib.load('models/scaler_soil_analysis.pkl')
-
     if request.method == 'POST':
         input_data = {
             'N': float(request.form['N']),
@@ -73,17 +75,18 @@ def soil_analysis():
             'rainfall': float(request.form['rainfall'])
         }
         
-        # Prepare data and predict soil type
         prepared_data = prepare_data(input_data, feature_names, scaler)
-        model = load_model(soil_model_path)
-        predicted_soil_type = predict_soil_type(model, prepared_data)
-        return render_template('soil_analysis.html', predicted_soil_type=predicted_soil_type)
+        model = load_model(SOIL_MODEL_PATH)
+        predicted_soil_type = predict(model, prepared_data)
+        return render_template('soil_analysis.html', predicted_soil_type=predicted_soil_type[0])
     
     return render_template('soil_analysis.html', predicted_soil_type=None)
 
+
 @app.route('/yield_production', methods=['GET', 'POST'])
 def yield_production():
-    yield_model_path = 'models/crop_yield_model.pkl'
+    feature_names = ['Rain Fall (mm)', 'Fertilizer', 'Temperature', 'Nitrogen (N)', 'Phosphorus (P)', 'Potassium (K)']
+    scaler = load_scaler(SCALER_YIELD_PATH)
     
     if request.method == 'POST':
         input_values = {
@@ -94,21 +97,21 @@ def yield_production():
             'Phosphorus (P)': float(request.form['phosphorus']),
             'Potassium (K)': float(request.form['potassium'])
         }
+
+        prepared_data = prepare_data(input_values, feature_names, scaler)
+        model = load_model(CROP_YIELD_MODEL_PATH)
+        predicted_yield = predict(model, prepared_data)
         
-        # Predict crop yield
-        predicted_yield = predict_yield(yield_model_path, input_values)
-        return render_template('yield_production.html', predicted_yield=predicted_yield)
+        return render_template('yield_production.html', predicted_yield=predicted_yield[0])
     
     return render_template('yield_production.html', predicted_yield=None)
 
+
 @app.route('/cropPrediction', methods=['GET', 'POST'])
 def crop_prediction():
-    model_path = 'models/crop_prediction_model.pkl'
     feature_names = ['Nitrogen (N)', 'Potassium (K)', 'Phosphate (P)', 'Temperature', 'Humidity', 'Rainfall']
+    scaler = load_scaler(SCALER_PREDICTION_PATH)
     
-    # Load the fitted scaler
-    scaler = joblib.load('models/scaler_crop_prediction.pkl')
-
     if request.method == 'POST':
         input_data = {
             'Nitrogen (N)': float(request.form['nitrogen']),
@@ -119,25 +122,20 @@ def crop_prediction():
             'Rainfall': float(request.form['rainfall'])
         }
         
-        # Prepare data for prediction
         prepared_data = prepare_data(input_data, feature_names, scaler)
-        model = load_model(model_path)
-        predicted_crop = predict_crop_type(model, prepared_data)
+        model = load_model(CROP_PREDICTION_MODEL_PATH)
+        predicted_crop = predict(model, prepared_data)
+        
         return render_template('cropPrediction.html', predicted_crop=predicted_crop[0])
     
     return render_template('cropPrediction.html', predicted_crop=None)
 
+
 @app.route('/price_prediction', methods=['GET', 'POST'])
 def price_prediction():
-    # Correct paths to the model and scaler
-    price_model_path = 'models/crop_price_model.pkl'
-    scaler_path = 'models/standard_scaler.pkl'
+    scaler = load_scaler(SCALER_PRICE_PATH)
     
-    # Load the scaler once (could be done in a separate function or as a global variable)
-    scaler = joblib.load(scaler_path)
-
     if request.method == 'POST':
-        # Extract input values from the form
         input_values = {
             'year': float(request.form['year']),
             'month': float(request.form['month']),
@@ -145,15 +143,13 @@ def price_prediction():
             'max_price': float(request.form['max_price'])
         }
         
-        # Prepare data for prediction
         feature_names = ['year', 'month', 'min_price', 'max_price']
         prepared_data = prepare_data(input_values, feature_names, scaler)
         
-        # Load the price prediction model and make a prediction
-        model = load_model(price_model_path)
-        predicted_price = predict_price(price_model_path, input_values)
+        model = load_model(PRICE_MODEL_PATH)
+        predicted_price = predict(model, prepared_data)
         
-        return render_template('price_prediction.html', predicted_price=predicted_price)
+        return render_template('price_prediction.html', predicted_price=predicted_price[0])
     
     return render_template('price_prediction.html', predicted_price=None)
 
@@ -169,16 +165,11 @@ def signup():
         username = request.form['username']
         password = request.form['password']
         
-        response = requests.post(f'{NODE_BACKEND_URL}/signup', json={'username': username, 'password': password})
-        
-        if response.status_code == 201:
-            flash('Signup successful. Please log in.')
-            return redirect(url_for('login'))
-        else:
-            flash('Signup failed. Please try again.')
-            return redirect(url_for('signup'))
+        flash('Signup successful. Please log in.')
+        return redirect(url_for('login'))
     
     return render_template('signup.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -186,14 +177,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
-        response = requests.post(f'{NODE_BACKEND_URL}/login', json={'username': username, 'password': password})
-        
-        if response.status_code == 200:
-            flash('Login successful!')
-            return redirect(url_for('home'))
-        else:
-            flash('Login failed. Please check your credentials.')
-            return redirect(url_for('login'))
+        flash('Login successful!')
+        return redirect(url_for('home'))
     
     return render_template('login.html')
 

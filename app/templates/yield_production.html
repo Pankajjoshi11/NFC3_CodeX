@@ -1,6 +1,89 @@
 {% extends "layout.html" %}
 
+{% block head %}
+    <style>
+        /* General styles */
+        body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+        color: #333;
+    }
+
+    /* Container for the form */
+    .form-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Form heading */
+    h1 {
+        color: #0056b3;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    /* Form element styles */
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    form label {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    form input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 16px;
+    }
+
+    form input:focus {
+        border-color: #0056b3;
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 86, 179, 0.3);
+    }
+
+    form button {
+        background-color: #0056b3;
+        color: #fff;
+        border: none;
+        padding: 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    form button:hover {
+        background-color: #004494;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 600px) {
+        .form-container {
+            padding: 15px;
+            margin: 20px;
+        }
+
+        form input, form button {
+            font-size: 14px;
+        }
+    }
+    </style>
+{% endblock %}
+
 {% block content %}
+    
+
     <h1>Crop Yield Prediction</h1>
     <form method="post">
         <label for="rain_fall">Rain Fall (mm):</label>
