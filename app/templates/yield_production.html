@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h1>Crop Yield Prediction</h1>
+    <form method="post">
+        <label for="rain_fall">Rain Fall (mm):</label>
+        <input type="number" step="any" name="rain_fall" id="rain_fall" required><br>
+        <label for="fertilizer">Fertilizer:</label>
+        <input type="number" step="any" name="fertilizer" id="fertilizer" required><br>
+        <label for="temperature">Temperature:</label>
+        <input type="number" step="any" name="temperature" id="temperature" required><br>
+        <label for="nitrogen">Nitrogen (N):</label>
+        <input type="number" step="any" name="nitrogen" id="nitrogen" required><br>
+        <label for="phosphorus">Phosphorus (P):</label>
+        <input type="number" step="any" name="phosphorus" id="phosphorus" required><br>
+        <label for="potassium">Potassium (K):</label>
+        <input type="number" step="any" name="potassium" id="potassium" required><br>
+        <button type="submit">Predict Crop Yield</button>
+    </form>
+
+    {% if predicted_yield is not none %}
+        <h2>Predicted Yield: {{ predicted_yield }}</h2>
+    {% endif %}
+{% endblock %}
