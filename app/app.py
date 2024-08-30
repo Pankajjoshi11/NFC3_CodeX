@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, flash
+import requests
 import pandas as pd
 import joblib
 from sklearn.preprocessing import StandardScaler
@@ -86,8 +87,10 @@ def home():
 def soil_analysis():
     soil_model_path = 'models/soil_classifier_model.pkl'
     feature_names = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
-    scaler = StandardScaler()  # Define a scaler to standardize data
     
+    # Load the fitted scaler
+    scaler = joblib.load('models/scaler_soil_analysis.pkl')
+
     if request.method == 'POST':
         input_data = {
             'N': float(request.form['N']),
@@ -129,10 +132,12 @@ def yield_production():
 
 @app.route('/cropPrediction', methods=['GET', 'POST'])
 def crop_prediction():
-    model_path = 'models/crop_type_model.pkl'
+    model_path = 'models/crop_prediction_model.pkl'
     feature_names = ['Nitrogen (N)', 'Potassium (K)', 'Phosphate (P)', 'Temperature', 'Humidity', 'Rainfall']
-    scaler = StandardScaler()  # Initialize a scaler for feature scaling
     
+    # Load the fitted scaler
+    scaler = joblib.load('models/scaler_crop_prediction.pkl')
+
     if request.method == 'POST':
         input_data = {
             'Nitrogen (N)': float(request.form['nitrogen']),
@@ -153,9 +158,15 @@ def crop_prediction():
 
 @app.route('/price_prediction', methods=['GET', 'POST'])
 def price_prediction():
+    # Correct paths to the model and scaler
     price_model_path = 'models/crop_price_model.pkl'
+    scaler_path = 'models/standard_scaler.pkl'
     
+    # Load the scaler once (could be done in a separate function or as a global variable)
+    scaler = joblib.load(scaler_path)
+
     if request.method == 'POST':
+        # Extract input values from the form
         input_values = {
             'year': float(request.form['year']),
             'month': float(request.form['month']),
@@ -163,8 +174,14 @@ def price_prediction():
             'max_price': float(request.form['max_price'])
         }
         
-        # Predict crop price
+        # Prepare data for prediction
+        feature_names = ['year', 'month', 'min_price', 'max_price']
+        prepared_data = prepare_data(input_values, feature_names, scaler)
+        
+        # Load the price prediction model and make a prediction
+        model = load_model(price_model_path)
         predicted_price = predict_price(price_model_path, input_values)
+        
         return render_template('price_prediction.html', predicted_price=predicted_price)
     
     return render_template('price_prediction.html', predicted_price=None)
@@ -328,6 +345,42 @@ def ocr_scanner():
 @app.route('/translate', methods=['GET'])
 def translate():
     return render_template('translate.html')
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        response = requests.post(f'{NODE_BACKEND_URL}/signup', json={'username': username, 'password': password})
+        
+        if response.status_code == 201:
+            flash('Signup successful. Please log in.')
+            return redirect(url_for('login'))
+        else:
+            flash('Signup failed. Please try again.')
+            return redirect(url_for('signup'))
+    
+    return render_template('signup.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        response = requests.post(f'{NODE_BACKEND_URL}/login', json={'username': username, 'password': password})
+        
+        if response.status_code == 200:
+            flash('Login successful!')
+            return redirect(url_for('home'))
+        else:
+            flash('Login failed. Please check your credentials.')
+            return redirect(url_for('login'))
+    
+    return render_template('login.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5003)
